@@ -1,0 +1,36 @@
+services:
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "12800:80"
+    depends_on:
+      - backend
+    networks:
+      - percost-network
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - FLASK_ENV=production
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production}
+      - TOKEN_EXPIRE_DAYS=${TOKEN_EXPIRE_DAYS:-7}
+      - CORS_ORIGINS=*
+    volumes:
+      - ./data:/app/data
+    networks:
+      - percost-network
+
+networks:
+  percost-network:
+    driver: bridge
+
+volumes:
+  data:

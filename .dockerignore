@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv
+env
+.venv
+
+# Build outputs
+dist
+build
+
+# Database (keep structure, ignore data)
+data/*.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+!README.md
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# Test
+coverage
+.nyc_output
