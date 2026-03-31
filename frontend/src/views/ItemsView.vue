@@ -193,7 +193,7 @@ const items = ref<Item[]>([])
 const loading = ref(true)
 const searchQuery = ref('')
 const selectedCategory = ref('')
-const sortBy = ref('purchase_date_desc')
+const sortBy = ref('date_desc')
 const showAddModal = ref(false)
 const editingItem = ref<Item | null>(null)
 const showLogoutConfirm = ref(false)
@@ -312,7 +312,7 @@ function formatAmount(amount: number) {
 function resetFilters() {
   searchQuery.value = ''
   selectedCategory.value = ''
-  sortBy.value = 'purchase_date_desc'
+  sortBy.value = 'date_desc'
 }
 
 async function fetchItems() {
