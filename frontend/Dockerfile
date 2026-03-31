@@ -9,8 +9,8 @@ RUN npm config set registry https://registry.npmmirror.com
 # 复制 package.json
 COPY package*.json ./
 
-# 安装依赖（包含可选依赖）
-RUN npm install --include=optional
+# 安装依赖
+RUN npm install
 
 # 复制源代码
 COPY . .
