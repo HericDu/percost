@@ -16,7 +16,8 @@ build/
 
 # Database
 *.db
-data/
+/data/
+!frontend/src/data/
 
 # Environment variables
 .env
