@@ -1,36 +1,20 @@
 services:
-  # 前端服务
-  frontend:
+  percost:
     build:
-      context: ./frontend
+      context: .
       dockerfile: Dockerfile
+    image: percost:latest
+    container_name: percost
+    restart: unless-stopped
     ports:
-      - "12800:80"
-    depends_on:
-      - backend
-    networks:
-      - percost-network
-
-  # 后端服务
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+      - "12800:5000"
     environment:
       FLASK_ENV: production
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-your-secret-key-change-in-production}
       TOKEN_EXPIRE_DAYS: ${TOKEN_EXPIRE_DAYS:-7}
-      CORS_ORIGINS: "*"
+      # 前后端同源，无需跨域放行
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:12800}
     volumes:
       - ./data:/app/data
-    networks:
-      - percost-network
-
-networks:
-  percost-network:
-    driver: bridge
-
-volumes:
-  data:

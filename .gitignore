@@ -13,6 +13,8 @@ env/
 dist/
 build/
 *.egg-info/
+# 前端构建产物（单容器构建时由 Dockerfile 生成，本地验证时手动拷贝）
+backend/static/
 
 # Database
 *.db
