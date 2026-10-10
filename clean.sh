@@ -3,9 +3,10 @@
 echo "🧹 清理旧的构建文件..."
 
 # 停止服务
-docker-compose down 2>/dev/null
+docker compose down 2>/dev/null
 
-# 删除旧镜像
+# 删除镜像（含历史双容器架构遗留的镜像）
+docker rmi percost:latest percost-percost 2>/dev/null
 docker rmi percost-frontend percost-backend 2>/dev/null
 
 # 清理 Docker 缓存

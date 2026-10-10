@@ -25,7 +25,7 @@ echo "🚀 正在启动服务..."
 echo ""
 
 # 启动 Docker Compose
-docker-compose up -d --build
+docker compose up -d --build
 
 # 等待服务启动
 echo ""
@@ -33,7 +33,7 @@ echo "⏳ 等待服务启动..."
 sleep 5
 
 # 检查服务状态
-if docker-compose ps | grep -q "Up"; then
+if docker compose ps | grep -q "Up"; then
     echo ""
     echo "✅ 服务启动成功！"
     echo ""
@@ -45,11 +45,11 @@ if docker-compose ps | grep -q "Up"; then
     echo ""
     echo "💡 提示："
     echo "   - 数据保存在 ./data 目录中"
-    echo "   - 停止服务：docker-compose down"
-    echo "   - 查看日志：docker-compose logs -f"
+    echo "   - 停止服务：docker compose down"
+    echo "   - 查看日志：docker compose logs -f"
     echo ""
 else
     echo ""
     echo "❌ 服务启动失败，请检查日志："
-    echo "   docker-compose logs"
+    echo "   docker compose logs"
 fi
