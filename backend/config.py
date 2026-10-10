@@ -23,6 +23,11 @@ class Config:
     # 管理员配置
     ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
     ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+
+    # 管理后台入口路径：访问 https://域名/<ADMIN_PATH> 才会显示登录页。
+    # 该值不会下发到前端，客户端只能提交候选路径由服务端比对。
+    # 注意：这是降低被自动化扫描命中的概率，不能替代强密码。
+    ADMIN_PATH = os.environ.get('ADMIN_PATH', 'login').strip().strip('/')
     
     # 文件上传配置
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB 最大上传大小

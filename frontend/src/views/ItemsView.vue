@@ -100,7 +100,9 @@
             记下买入价和使用频率，Percost 会算出每次使用的真实成本，
             帮你判断一件东西到底值不值。
           </p>
+          <!-- 仅登录后可见：未登录时不暴露任何通往后台的入口 -->
           <button
+            v-if="authStore.isAuthenticated"
             @click="handleAddClick"
             class="mt-6 px-6 py-2.5 rounded-pill text-sm font-semibold text-white btn-solid"
           >
@@ -147,19 +149,16 @@
       </template>
     </main>
 
-    <!-- 右下角操作区 -->
-    <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-center gap-2.5 z-50">
-      <!-- 已登录：退出按钮 -->
-      <button
-        v-if="authStore.isAuthenticated"
-        @click="handleLogout"
-        class="fab fab-ghost"
-        aria-label="退出登录"
-      >
+    <!-- 右下角操作区：仅登录后出现。
+         未登录时整块不渲染，页面上不存在任何指向后台的线索 -->
+    <div
+      v-if="authStore.isAuthenticated"
+      class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-center gap-2.5 z-50"
+    >
+      <button @click="handleLogout" class="fab fab-ghost" aria-label="退出登录">
         <LogOut class="w-[18px] h-[18px]" />
       </button>
 
-      <!-- 添加按钮 -->
       <button @click="handleAddClick" class="fab fab-primary" aria-label="添加物品">
         <Plus class="w-6 h-6" />
       </button>
@@ -274,10 +273,8 @@ const categories = [
 ]
 
 function handleAddClick() {
-  if (!authStore.isAuthenticated) {
-    router.push('/login')
-    return
-  }
+  // 入口本身仅登录后渲染，此处再兜一层，避免未授权状态打开弹窗
+  if (!authStore.isAuthenticated) return
   showAddModal.value = true
 }
 

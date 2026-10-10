@@ -50,7 +50,7 @@
             to="/"
             class="text-[12.5px] text-ink-400 hover:text-indigo-500 transition-colors"
           >
-            不登录，先去看看
+            返回首页
           </router-link>
         </div>
       </div>

@@ -75,7 +75,10 @@ chmod +x start.sh && ./start.sh
 
 **3. 访问**
 
-打开 <http://localhost:12800>，默认账号 `admin` / `admin123`（或你在 `.env` 中设置的密码）。
+- 前台（公开浏览）：<http://localhost:12800>
+- 管理后台：<http://localhost:12800/你设置的-ADMIN_PATH>
+
+默认账号 `admin` / `admin123`（或你在 `.env` 中设置的密码）。
 
 ---
 
@@ -161,6 +164,7 @@ npm run dev
 |---|---|---|
 | `ADMIN_USERNAME` | `admin` | 管理员用户名 |
 | `ADMIN_PASSWORD` | `admin123` | 管理员密码，**生产环境必改** |
+| `ADMIN_PATH` | `login` | 管理后台入口路径，**公网部署建议改为随机值** |
 | `JWT_SECRET_KEY` | 占位字符串 | Token 签名密钥，**生产环境必改** |
 | `TOKEN_EXPIRE_DAYS` | `7` | 登录有效期（天） |
 | `CORS_ORIGINS` | `http://localhost:12800` | 跨域白名单，单容器部署下同源，一般无需放开 |
@@ -168,6 +172,50 @@ npm run dev
 | `DATABASE_URL` | SQLite | 可替换为其他 SQLAlchemy 连接串 |
 
 `.env` 已在 `.gitignore` 中，不会进入版本库。**新服务器上需要手动创建。**
+
+---
+
+## 访问控制
+
+前台完全公开，任何人都能浏览物品与成本数据；**增删改一律需要登录**。
+
+### 隐藏式后台入口
+
+登录页不在固定的 `/login`，而是由 `ADMIN_PATH` 决定：
+
+```env
+ADMIN_PATH=k7m2x9p4q1
+```
+
+访问 `https://域名/k7m2x9p4q1` 才会出现登录表单，其余任何路径都返回 404。
+
+生成随机路径：
+
+```bash
+openssl rand -hex 12
+```
+
+实现上有三点保证路径不被轻易发现：
+
+1. **路径不下发前端** — 构建产物里不含该值，读 JS 也拿不到。浏览器只能把候选路径提交给 `/api/auth/gate`，由服务端比对
+2. **常量时间比较** — 使用 `hmac.compare_digest`，无法通过响应耗时逐字符推断
+3. **探测限流** — 同一 IP 5 分钟内最多 10 次探测，超限返回 429
+
+未登录状态下，页面上不存在任何指向后台的按钮或链接。
+
+### 登录爆破防护
+
+同一 IP 连续 8 次密码错误后锁定 15 分钟，登录成功即清零。
+
+> ⚠️ **务必理解**：隐藏路径属于 security through obscurity，它只能**降低被自动化扫描批量命中的概率**，不构成真正的访问控制。
+> 一旦路径泄露（如浏览器历史、Referer、他人代操作），唯一的防线就是密码。
+> **因此 `ADMIN_PASSWORD` 仍然必须设置为强密码，`JWT_SECRET_KEY` 必须随机。**
+
+### 已知限制
+
+- 限流状态存于单进程内存，仅适用于当前的 `gunicorn --workers 1` 配置。若扩为多 worker 或多实例，需改用 Redis 等共享存储
+- 容器重启会清空限流计数
+- `X-Forwarded-For` 可被伪造，仅在部署于可信反向代理之后时才可靠
 
 ---
 
@@ -198,6 +246,7 @@ tar -czf percost-backup-$(date +%Y%m%d).tar.gz data/
 
 | 方法 | 路径 | 说明 | 需认证 |
 |---|---|---|---|
+| POST | `/api/auth/gate` | 校验后台入口路径，错误返回 404 | — |
 | POST | `/api/auth/login` | 登录，返回 token | — |
 | POST | `/api/auth/logout` | 登出 | ✓ |
 | GET | `/api/auth/verify` | 校验 token 有效性 | ✓ |
@@ -276,10 +325,12 @@ Percost/
 ## 生产部署建议
 
 1. **改掉默认凭据** — `ADMIN_PASSWORD` 与 `JWT_SECRET_KEY` 必须替换，否则等同裸奔
-2. **收紧 CORS** — 单容器下前后端同源，`CORS_ORIGINS` 设为实际访问域名即可
-3. **配置 HTTPS** — 在前置网关（Nginx / Caddy / 云厂商负载均衡）终止 TLS
-4. **定期备份** — 见上文 crontab 示例
-5. **反向代理** — 若前置 Nginx，将 `/` 整体转发至容器 `5000` 端口，无需按路径分流
+2. **设置随机后台入口** — `ADMIN_PATH` 改为 `openssl rand -hex 12` 生成的随机值
+3. **收紧 CORS** — 单容器下前后端同源，`CORS_ORIGINS` 设为实际访问域名即可
+4. **配置 HTTPS** — 在前置网关（Nginx / Caddy / 云厂商负载均衡）终止 TLS。
+   注意：未加密传输时后台路径会以明文出现在链路中
+5. **定期备份** — 见上文 crontab 示例
+6. **反向代理** — 若前置 Nginx，将 `/` 整体转发至容器 `5000` 端口，无需按路径分流
 
 ---
 
@@ -293,6 +344,30 @@ Percost/
 ```yaml
 ports:
   - "你的端口:5000"
+```
+
+</details>
+
+<details>
+<summary>忘记后台入口路径</summary>
+
+查看服务器上的 `.env` 文件：
+
+```bash
+grep ADMIN_PATH .env
+```
+
+改完需重启容器生效：`docker compose up -d`（无需重新构建）。
+
+</details>
+
+<details>
+<summary>登录被锁定（429）</summary>
+
+同一 IP 连续 8 次密码错误会锁定 15 分钟。等待窗口结束即可，或重启容器立即清空计数：
+
+```bash
+docker compose restart
 ```
 
 </details>
