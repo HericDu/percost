@@ -1,30 +1,43 @@
 <template>
-  <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 backdrop-blur-sm">
-    <div class="bg-white/90 backdrop-blur-2xl rounded-t-[2rem] sm:rounded-[2rem] w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden border border-white/50 shadow-2xl">
-      <div class="p-5 sm:p-6 overflow-y-auto max-h-[92vh] sm:max-h-[90vh]">
+  <div
+    class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink-900/25 backdrop-blur-sm sm:p-4"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="lg rounded-t-modal sm:rounded-modal w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] overflow-hidden modal-in">
+      <div class="p-5 sm:p-6 overflow-y-auto max-h-[92vh] sm:max-h-[88vh]">
         <!-- 标题栏 -->
         <div class="flex items-center justify-between mb-5">
-          <h2 class="text-lg font-bold text-gray-900">
+          <h2 class="text-[17px] font-bold text-ink-900 tracking-tight">
             {{ item ? '编辑物品' : '添加物品' }}
           </h2>
-          <button @click="$emit('close')" class="glass-button p-2 rounded-2xl flex items-center justify-center">
-            <X class="w-5 h-5 text-gray-500" />
+          <button
+            @click="$emit('close')"
+            aria-label="关闭"
+            class="glass-button w-8 h-8 rounded-pill flex items-center justify-center shrink-0"
+          >
+            <X class="w-4 h-4 text-ink-500" />
           </button>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <!-- 图标选择器 -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <label class="field-label">
               图标 *
             </label>
-            <div class="flex items-center gap-3 mb-2">
-              <div class="w-12 h-12 rounded-2xl glass-card flex items-center justify-center text-2xl cursor-pointer" @click="showEmojiPicker = !showEmojiPicker">
+            <div class="flex items-center gap-3 mb-2.5">
+              <button
+                type="button"
+                class="w-11 h-11 rounded-ctl glass-button flex items-center justify-center text-[22px] shrink-0"
+                :aria-expanded="showEmojiPicker"
+                @click="showEmojiPicker = !showEmojiPicker"
+              >
                 {{ form.emoji || '📦' }}
-              </div>
-              <span class="text-xs text-gray-400">点击选择图标</span>
+              </button>
+              <span class="text-[12px] text-ink-400">点击选择图标</span>
             </div>
-            <div v-if="showEmojiPicker" class="bg-white/80 backdrop-blur-xl rounded-3xl p-3 border border-white/40 shadow-lg">
+            <div v-if="showEmojiPicker" class="emoji-panel rounded-card p-3">
               <!-- 分类标签 -->
               <div class="flex gap-1.5 mb-3 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                 <button
@@ -32,26 +45,24 @@
                   :key="cat.name"
                   type="button"
                   @click="activeCategory = cat.name"
-                  class="px-3 py-1.5 rounded-full text-xs whitespace-nowrap font-medium transition-all duration-200"
-                  :class="activeCategory === cat.name
-                    ? 'bg-indigo-500 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'"
+                  class="chip"
+                  :class="activeCategory === cat.name ? 'chip-active' : ''"
                 >
                   {{ cat.name }}
                 </button>
               </div>
               <!-- Emoji 网格 -->
-              <div class="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-52 overflow-y-auto pr-1">
+              <div class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 max-h-52 overflow-y-auto pr-1">
                 <button
                   v-for="item in currentEmojis"
                   :key="item.icon"
                   type="button"
                   @click="selectEmoji(item.icon)"
-                  class="flex flex-col items-center justify-center gap-1 py-2 rounded-2xl hover:bg-indigo-50 transition-colors glass-press"
-                  :class="form.emoji === item.icon ? 'bg-indigo-100 ring-2 ring-indigo-400/40' : ''"
+                  class="emoji-tile"
+                  :class="form.emoji === item.icon ? 'emoji-tile-active' : ''"
                 >
-                  <span class="text-2xl leading-none">{{ item.icon }}</span>
-                  <span class="text-[10px] text-gray-400 leading-tight truncate w-full text-center">{{ item.label }}</span>
+                  <span class="text-[22px] leading-none">{{ item.icon }}</span>
+                  <span class="text-[10px] text-ink-400 leading-tight truncate w-full text-center">{{ item.label }}</span>
                 </button>
               </div>
             </div>
@@ -59,7 +70,7 @@
 
           <!-- 物品名称 -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <label class="field-label">
               物品名称 *
             </label>
             <input
@@ -67,20 +78,20 @@
               type="text"
               required
               maxlength="200"
-              class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+              class="field-input"
               placeholder="MacBook Pro"
             />
           </div>
 
           <!-- 分类 -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <label class="field-label">
               分类 *
             </label>
             <select
               v-model="form.category"
               required
-              class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+              class="field-input"
             >
               <option value="">请选择分类</option>
               <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
@@ -90,14 +101,14 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- 购买金额 -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="field-label">
                 购买金额 (元) *
               </label>
               <input
                 type="number"
                 required
                 min="0"
-                class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+                class="field-input"
                 :class="{ 'amount-placeholder': !isPurchaseFocused && form.purchase_amount === 0 }"
                 :value="form.purchase_amount === 0 && !isPurchaseFocused ? '' : form.purchase_amount"
                 @focus="onAmountFocus('purchase')"
@@ -109,14 +120,14 @@
 
             <!-- 购买日期 -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="field-label">
                 购买日期 *
               </label>
               <input
                 v-model="form.purchase_date"
                 type="date"
                 required
-                class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+                class="field-input"
               />
             </div>
           </div>
@@ -124,13 +135,13 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- 额外成本 -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="field-label">
                 额外成本 (元)
               </label>
               <input
                 type="number"
                 min="0"
-                class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+                class="field-input"
                 :class="{ 'amount-placeholder': !isExtraFocused && form.extra_cost === 0 }"
                 :value="form.extra_cost === 0 && !isExtraFocused ? '' : form.extra_cost"
                 @focus="onAmountFocus('extra')"
@@ -142,13 +153,13 @@
 
             <!-- 处置价格 -->
             <div>
-              <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <label class="field-label">
                 处置价格 (元)
               </label>
               <input
                 type="number"
                 min="0"
-                class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+                class="field-input"
                 :class="{ 'amount-placeholder': !isDisposalFocused && form.disposal_price === 0 }"
                 :value="form.disposal_price === 0 && !isDisposalFocused ? '' : form.disposal_price"
                 @focus="onAmountFocus('disposal')"
@@ -161,13 +172,13 @@
 
           <!-- 使用频率 -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <label class="field-label">
               使用频率
             </label>
             <div class="grid grid-cols-2 gap-3">
               <select
                 v-model="form.usage_frequency_type"
-                class="glass-input px-4 py-2.5 rounded-2xl text-sm"
+                class="field-input"
               >
                 <option value="daily">每天</option>
                 <option value="weekly">每周</option>
@@ -179,7 +190,7 @@
                 v-model.number="form.usage_frequency_value"
                 type="number"
                 min="1"
-                class="glass-input px-4 py-2.5 rounded-2xl text-sm"
+                class="field-input"
                 placeholder="次数"
               />
             </div>
@@ -187,42 +198,42 @@
 
           <!-- 使用截止日期 -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <label class="field-label">
               使用截止日期
-              <span class="text-xs text-gray-400 font-normal ml-1">不填则视为使用中</span>
+              <span class="field-hint">不填则视为使用中</span>
             </label>
             <input
               v-model="form.expiry_date"
               type="date"
-              class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm"
+              class="field-input"
             />
           </div>
 
           <!-- 备注 -->
           <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
+            <label class="field-label">
               备注
             </label>
             <textarea
               v-model="form.remark"
               rows="3"
-              class="glass-input w-full px-4 py-2.5 rounded-2xl text-sm resize-none"
+              class="field-input"
               placeholder="其他备注信息"
             />
           </div>
 
           <!-- 按钮 -->
-          <div class="flex gap-3 pt-2">
+          <div class="flex gap-2.5 pt-2">
             <button
               type="button"
               @click="$emit('close')"
-              class="flex-1 py-3 rounded-2xl glass-button text-sm font-medium text-gray-500 flex items-center justify-center"
+              class="flex-1 py-3 rounded-pill glass-button text-sm font-medium text-ink-500"
             >
               取消
             </button>
             <button
               type="submit"
-              class="flex-1 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center"
+              class="flex-1 py-3 rounded-pill text-sm font-semibold text-white btn-solid"
             >
               {{ item ? '更新' : '保存' }}
             </button>
@@ -234,20 +245,20 @@
     <!-- 验证错误弹窗 -->
     <div
       v-if="validationError"
-      class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[60]"
+      class="fixed inset-0 bg-ink-900/25 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+      role="alertdialog"
+      aria-modal="true"
       @click.self="validationError = ''"
     >
-      <div class="bg-white/90 backdrop-blur-2xl rounded-3xl p-6 w-80 shadow-xl border border-white/50">
-        <h3 class="text-lg font-bold text-gray-900 mb-2 text-center">提示</h3>
-        <p class="text-sm text-gray-500 mb-6 text-center">{{ validationError }}</p>
-        <div class="flex gap-3">
-          <button
-            @click="validationError = ''"
-            class="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center"
-          >
-            我知道了
-          </button>
-        </div>
+      <div class="lg rounded-modal p-6 w-full max-w-[20rem] modal-in">
+        <h3 class="text-base font-bold text-ink-900 mb-2 text-center">还差一点</h3>
+        <p class="text-[13px] text-ink-500 mb-6 text-center leading-relaxed">{{ validationError }}</p>
+        <button
+          @click="validationError = ''"
+          class="w-full py-2.5 rounded-pill text-sm font-semibold text-white btn-solid"
+        >
+          知道了
+        </button>
       </div>
     </div>
   </div>

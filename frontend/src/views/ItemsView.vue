@@ -1,132 +1,166 @@
 <template>
   <div class="min-h-screen flex flex-col">
     <!-- 主要内容 -->
-    <main class="flex-1 px-4 sm:px-8 lg:px-16 max-w-7xl mx-auto w-full pb-4">
-      <!-- 统计卡片 -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-5 pt-6">
-        <div class="glass-card rounded-3xl p-4 sm:p-5 hover:-translate-y-0.5 transition-transform duration-300 flex flex-col justify-center">
-          <div class="flex items-center gap-2.5 mb-2.5">
-            <div class="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
-              <Package class="w-5 h-5 text-indigo-500" />
+    <main class="flex-1 px-4 sm:px-6 lg:px-10 xl:px-14 max-w-[1600px] mx-auto w-full">
+      <!-- 顶部单行 Dock：左侧指标摘要 + 右侧搜索筛选 -->
+      <div class="lg rounded-card px-4 py-[18px] sm:px-5 sm:py-[22px] mt-4 mb-[var(--gap-section)]">
+        <!-- 始终左右分割，不换行：左侧指标 ~60%，右侧筛选 ~40% -->
+        <div class="dock-row">
+          <!-- 指标条：占据左侧主导空间，溢出时横向滚动 -->
+          <div class="metric-rail flex items-center overflow-x-auto scrollbar-hide">
+            <div
+              v-for="(metric, i) in metrics"
+              :key="metric.label"
+              class="stat-cell shrink-0"
+              :class="[metric.tone, { 'stat-divided': i > 0 }]"
+            >
+              <div class="stat-value tnum">
+                <span v-if="metric.unit" class="stat-unit">{{ metric.unit }}</span>{{ metric.value
+                }}<span v-if="metric.suffix" class="stat-suffix">{{ metric.suffix }}</span>
+              </div>
+              <div class="stat-label">{{ metric.label }}</div>
             </div>
-            <span class="text-sm font-semibold text-gray-700">总物品数</span>
           </div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 text-left">{{ stats.total }}</div>
-        </div>
-        <div class="glass-card rounded-3xl p-4 sm:p-5 hover:-translate-y-0.5 transition-transform duration-300 flex flex-col justify-center">
-          <div class="flex items-center gap-2.5 mb-2.5">
-            <div class="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-              <Wallet class="w-5 h-5 text-purple-500" />
+
+          <!-- 搜索与筛选：压缩到右侧，所有控件统一 36px 高、药丸圆角 -->
+          <div class="dock-tools">
+            <div class="relative flex-1 min-w-0 xl:flex-none xl:w-[150px]">
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-[14px] h-[14px] text-ink-400 pointer-events-none" />
+              <input
+                v-model="searchQuery"
+                type="search"
+                placeholder="搜索"
+                aria-label="搜索物品名称"
+                class="ctl ctl-input w-full pl-8"
+              />
             </div>
-            <span class="text-sm font-semibold text-gray-700">总投资</span>
-          </div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 text-left">{{ formatAmount(stats.totalAmount) }}</div>
-        </div>
-        <div class="glass-card rounded-3xl p-4 sm:p-5 hover:-translate-y-0.5 transition-transform duration-300 flex flex-col justify-center">
-          <div class="flex items-center gap-2.5 mb-2.5">
-            <div class="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-              <Calculator class="w-5 h-5 text-blue-500" />
+            <!-- 窄屏收为图标：select 透明覆盖在图标上，仍触发系统原生选择器，
+                 功能不丢失，只是省掉当前值的文字展示 -->
+            <div class="ctl-compact shrink-0">
+              <Tag class="ctl-compact-icon" aria-hidden="true" />
+              <select v-model="selectedCategory" aria-label="按分类筛选物品" class="ctl ctl-select">
+                <option value="">所有分类</option>
+                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
             </div>
-            <span class="text-sm font-semibold text-gray-700">平均每次成本</span>
-          </div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 text-left">¥{{ stats.avgCost.toFixed(2) }}</div>
-        </div>
-        <div class="glass-card rounded-3xl p-4 sm:p-5 hover:-translate-y-0.5 transition-transform duration-300 flex flex-col justify-center">
-          <div class="flex items-center gap-2.5 mb-2.5">
-            <div class="w-10 h-10 rounded-2xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
-              <CheckCircle class="w-5 h-5 text-emerald-500" />
+            <!-- 排序项用自然语言描述结果，而非「字段 + 箭头」的抽象表达 -->
+            <div class="ctl-compact shrink-0">
+              <ArrowUpDown class="ctl-compact-icon" aria-hidden="true" />
+              <select v-model="sortBy" aria-label="选择列表排序方式" class="ctl ctl-select">
+                <option value="date_desc">最近买的在前</option>
+                <option value="date_asc">最早买的在前</option>
+                <option value="cost_asc">最划算的在前</option>
+                <option value="cost_desc">最不划算的在前</option>
+                <option value="price_asc">买得最便宜的在前</option>
+                <option value="price_desc">买得最贵的在前</option>
+                <option value="usage_asc">用得最少的在前</option>
+                <option value="usage_desc">用得最多的在前</option>
+              </select>
             </div>
-            <span class="text-sm font-semibold text-gray-700">使用中</span>
+            <button
+              v-if="hasActiveFilters"
+              @click="resetFilters"
+              aria-label="清除搜索与筛选，恢复默认列表"
+              title="清除筛选"
+              class="ctl ctl-icon shrink-0"
+            >
+              <RotateCcw class="w-[14px] h-[14px]" />
+            </button>
           </div>
-          <div class="text-2xl sm:text-3xl font-bold text-gray-900 text-left">{{ stats.inUse }}</div>
         </div>
       </div>
 
-      <!-- 搜索、筛选、排序 -->
-      <div class="glass-card rounded-3xl p-3 sm:p-4 mb-5">
-        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div class="relative flex-1 min-w-[140px] sm:min-w-[180px]">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="搜索物品..."
-              class="glass-input w-full pl-9 pr-4 py-2.5 rounded-2xl text-sm"
-            />
+      <!-- 加载骨架 -->
+      <div
+        v-if="loading"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[var(--gap-grid)]"
+      >
+        <div
+          v-for="n in 8"
+          :key="n"
+          class="glass-card rounded-card p-5 h-[212px] animate-pulse"
+          aria-hidden="true"
+        >
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-9 h-9 rounded-pill bg-ink-200/50" />
+            <div class="h-4 w-2/5 rounded-pill bg-ink-200/50" />
           </div>
-          <select
-            v-model="selectedCategory"
-            class="glass-input px-3 py-2.5 rounded-2xl text-sm min-w-[100px]"
-          >
-            <option value="">全部分类</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
-          <select
-            v-model="sortBy"
-            class="glass-input px-3 py-2.5 rounded-2xl text-sm min-w-[100px]"
-          >
-            <option value="">默认排序</option>
-            <option value="cost_asc">每次成本 低→高</option>
-            <option value="cost_desc">每次成本 高→低</option>
-            <option value="price_asc">购买价格 低→高</option>
-            <option value="price_desc">购买价格 高→低</option>
-            <option value="usage_asc">使用次数 低→高</option>
-            <option value="usage_desc">使用次数 高→低</option>
-            <option value="date_asc">购买日期 早→晚</option>
-            <option value="date_desc">购买日期 晚→早</option>
-          </select>
-          <button
-            @click="resetFilters"
-            class="glass-button px-3 py-2.5 rounded-2xl text-sm text-gray-500 flex items-center gap-1.5"
-          >
-            <RotateCcw class="w-3.5 h-3.5" />
-            <span>重置</span>
-          </button>
+          <div class="space-y-3">
+            <div v-for="i in 5" :key="i" class="h-3 rounded-pill bg-ink-100/70" :style="{ width: `${90 - i * 9}%` }" />
+          </div>
         </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div v-else-if="filteredItems.length === 0" class="lg rounded-card text-center px-6 py-16">
+        <template v-if="items.length === 0">
+          <div class="text-5xl mb-4">🧮</div>
+          <h2 class="text-base font-semibold text-ink-800 mb-1.5">还没有记录任何物品</h2>
+          <p class="text-[13px] text-ink-500 max-w-sm mx-auto leading-relaxed">
+            记下买入价和使用频率，Percost 会算出每次使用的真实成本，
+            帮你判断一件东西到底值不值。
+          </p>
+          <button
+            @click="handleAddClick"
+            class="mt-6 px-6 py-2.5 rounded-pill text-sm font-semibold text-white btn-solid"
+          >
+            记录第一件物品
+          </button>
+        </template>
+        <template v-else>
+          <div class="text-5xl mb-4">🔍</div>
+          <h2 class="text-base font-semibold text-ink-800 mb-1.5">没有匹配的物品</h2>
+          <p class="text-[13px] text-ink-500">
+            换个关键词，或
+            <button @click="resetFilters" class="text-indigo-600 font-medium hover:underline underline-offset-2">
+              清除筛选条件
+            </button>
+          </p>
+        </template>
       </div>
 
       <!-- 物品网格 -->
-      <div v-if="filteredItems.length === 0" class="text-center py-16">
-        <div class="text-4xl mb-3">📦</div>
-        <p class="text-gray-400 text-sm">暂无物品数据</p>
-        <button
-          @click="handleAddClick"
-          class="mt-4 glass-button px-6 py-2.5 rounded-2xl text-sm font-medium text-indigo-600"
-        >
-          添加第一个物品
-        </button>
-      </div>
+      <template v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[var(--gap-grid)]">
+          <ItemCard
+            v-for="(item, i) in pagedItems"
+            :key="item.id"
+            :item="item"
+            :is-authenticated="authStore.isAuthenticated"
+            class="card-enter"
+            :style="{ animationDelay: `${Math.min(i, 11) * 22}ms` }"
+            @edit="editItem"
+            @delete="askDelete"
+            @record-usage="recordUsage"
+          />
+        </div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <ItemCard
-          v-for="item in filteredItems"
-          :key="item.id"
-          :item="item"
-          :is-authenticated="authStore.isAuthenticated"
-          @edit="editItem"
-          @delete="deleteItem"
-          @record-usage="recordUsage"
-        />
-      </div>
+        <!-- 分页：置于列表末尾的文档流中，随内容自然下落 -->
+        <div class="flex justify-center mt-5">
+          <PaginationBar
+            :current="currentPage"
+            :total-items="filteredItems.length"
+            :effective-size="effectivePageSize"
+            @update:current="goToPage"
+          />
+        </div>
+      </template>
     </main>
 
     <!-- 右下角操作区 -->
-    <div class="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 flex flex-col items-center gap-3 z-50">
-      <!-- 已登录：退出按钮（与添加按钮同样式） -->
+    <div class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col items-center gap-2.5 z-50">
+      <!-- 已登录：退出按钮 -->
       <button
         v-if="authStore.isAuthenticated"
         @click="handleLogout"
-        class="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-400 to-red-500 text-white shadow-lg shadow-rose-500/25 hover:shadow-xl hover:shadow-rose-500/30 transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
-        title="退出登录"
+        class="fab fab-ghost"
+        aria-label="退出登录"
       >
-        <LogOut class="w-6 h-6" />
+        <LogOut class="w-[18px] h-[18px]" />
       </button>
 
       <!-- 添加按钮 -->
-      <button
-        @click="handleAddClick"
-        class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transform hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center"
-      >
+      <button @click="handleAddClick" class="fab fab-primary" aria-label="添加物品">
         <Plus class="w-6 h-6" />
       </button>
     </div>
@@ -134,26 +168,59 @@
     <!-- 退出确认弹窗 -->
     <div
       v-if="showLogoutConfirm"
-      class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[60]"
+      class="fixed inset-0 bg-ink-900/25 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+      role="dialog"
+      aria-modal="true"
       @click.self="showLogoutConfirm = false"
     >
-      <div class="bg-white/90 backdrop-blur-2xl rounded-3xl p-6 w-80 shadow-xl border border-white/50">
-        <h3 class="text-lg font-bold text-gray-900 mb-2 text-center">确认退出</h3>
-        <p class="text-sm text-gray-500 mb-6 text-center">
-          当前用户为 <span class="font-semibold text-gray-700">{{ authStore.user?.username }}</span>，确认退出登录吗？
+      <div class="lg rounded-modal p-6 w-full max-w-[20rem] modal-in">
+        <h3 class="text-base font-bold text-ink-900 mb-2 text-center">确认退出</h3>
+        <p class="text-[13px] text-ink-500 mb-6 text-center leading-relaxed">
+          当前登录 <span class="font-semibold text-ink-700">{{ authStore.user?.username }}</span>，退出后将无法编辑数据。
         </p>
-        <div class="flex gap-3">
+        <div class="flex gap-2.5">
           <button
             @click="showLogoutConfirm = false"
-            class="flex-1 py-2.5 rounded-2xl glass-button text-sm font-medium text-gray-500 flex items-center justify-center"
+            class="flex-1 py-2.5 rounded-pill glass-button text-sm font-medium text-ink-500"
           >
             取消
           </button>
           <button
             @click="confirmLogout"
-            class="flex-1 py-2.5 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center"
+            class="flex-1 py-2.5 rounded-pill text-sm font-semibold text-white btn-solid"
           >
-            确认退出
+            退出登录
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div
+      v-if="pendingDelete"
+      class="fixed inset-0 bg-ink-900/25 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+      role="dialog"
+      aria-modal="true"
+      @click.self="pendingDelete = null"
+    >
+      <div class="lg rounded-modal p-6 w-full max-w-[20rem] modal-in">
+        <h3 class="text-base font-bold text-ink-900 mb-2 text-center">删除这件物品？</h3>
+        <p class="text-[13px] text-ink-500 mb-6 text-center leading-relaxed">
+          <span class="font-semibold text-ink-700">{{ pendingDelete.emoji }} {{ pendingDelete.name }}</span>
+          的成本记录将被永久移除，无法恢复。
+        </p>
+        <div class="flex gap-2.5">
+          <button
+            @click="pendingDelete = null"
+            class="flex-1 py-2.5 rounded-pill glass-button text-sm font-medium text-ink-500"
+          >
+            取消
+          </button>
+          <button
+            @click="confirmDelete"
+            class="flex-1 py-2.5 rounded-pill text-sm font-semibold text-white btn-danger"
+          >
+            删除
           </button>
         </div>
       </div>
@@ -167,24 +234,26 @@
       @save="saveItem"
     />
 
-    <!-- 底部信息 -->
-    <footer class="text-center py-8 px-4 space-y-1.5 flex-shrink-0">
-      <p class="text-xs text-gray-400">&copy;2025 - 2027 By HericDu</p>
-      <p class="text-xs text-gray-300">powered by codebuddy</p>
-      <p class="text-xs text-gray-300">蜀ICP备2023020875号</p>
+    <!-- 底部信息：三行居中，右侧留出 FAB 的空间 -->
+    <footer class="text-center pl-4 pr-20 sm:px-4 pt-6 pb-6 flex-shrink-0 space-y-1.5">
+      <p class="text-[11px] text-ink-400">&copy;2025 - 2027 By HericDu</p>
+      <p class="text-[11px] text-ink-300">powered by codebuddy</p>
+      <p class="text-[11px] text-ink-300">蜀ICP备2023020875号</p>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, Package, Wallet, Calculator, CheckCircle, Search, RotateCcw, LogOut } from 'lucide-vue-next'
+import { Plus, Search, RotateCcw, LogOut, Tag, ArrowUpDown } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import { itemsApi } from '@/api/items'
 import type { Item } from '@/types'
 import ItemCard from '@/components/ItemCard.vue'
 import AddItemModal from '@/components/AddItemModal.vue'
+import PaginationBar from '@/components/PaginationBar.vue'
+import { useResponsivePageSize } from '@/composables/useResponsivePageSize'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -197,6 +266,7 @@ const sortBy = ref('date_desc')
 const showAddModal = ref(false)
 const editingItem = ref<Item | null>(null)
 const showLogoutConfirm = ref(false)
+const pendingDelete = ref<Item | null>(null)
 
 const categories = [
   '电子产品', '家用电器', '生活用品', '服饰鞋包',
@@ -289,6 +359,35 @@ const filteredItems = computed(() => {
   return result
 })
 
+/* ---------- 分页 ----------
+   必须定义在 filteredItems 之后：下方 watch 的 getter 会在 setup 同步阶段
+   立即求值一次以取得初始值，提前引用会命中 const 的暂时性死区。 */
+
+// 每页数量完全跟随视窗，不提供手动选择
+const { autoSize: effectivePageSize } = useResponsivePageSize()
+const currentPage = ref(1)
+
+const pagedItems = computed(() => {
+  const start = (currentPage.value - 1) * effectivePageSize.value
+  return filteredItems.value.slice(start, start + effectivePageSize.value)
+})
+
+function goToPage(page: number) {
+  currentPage.value = page
+  // 翻页后回到列表顶部，避免停留在上一页底部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 筛选条件变化或页数缩减时，把越界的页码拉回有效范围
+watch([() => filteredItems.value.length, effectivePageSize], ([total, size]) => {
+  const maxPage = Math.max(1, Math.ceil(total / size))
+  if (currentPage.value > maxPage) currentPage.value = maxPage
+})
+
+watch([searchQuery, selectedCategory, sortBy], () => {
+  currentPage.value = 1
+})
+
 const stats = computed(() => {
   const total = items.value.length
   const totalAmount = items.value.reduce((sum, item) => sum + item.purchase_amount, 0)
@@ -301,6 +400,29 @@ const stats = computed(() => {
 
   return { total, totalAmount, avgCost, inUse }
 })
+
+/* 指标拆成「单位 / 数值 / 后缀」三段，便于让数值独占最大字号，
+   单位与后缀降级 —— 导向标识里数字永远是主体。 */
+const metrics = computed(() => {
+  const amount = stats.value.totalAmount
+  const isWan = amount >= 10000
+  return [
+    { label: '记录物品', value: String(stats.value.total), suffix: '件', tone: 'metric-1' },
+    {
+      label: '累计花费',
+      unit: '¥',
+      value: isWan ? (amount / 10000).toFixed(1) : amount.toLocaleString(),
+      suffix: isWan ? '万' : '',
+      tone: 'metric-2',
+    },
+    { label: '件均价格', unit: '¥', value: Math.round(stats.value.avgCost).toLocaleString(), tone: 'metric-3' },
+    { label: '仍在使用', value: String(stats.value.inUse), suffix: '件', tone: 'metric-4' },
+  ]
+})
+
+const hasActiveFilters = computed(() =>
+  Boolean(searchQuery.value || selectedCategory.value) || sortBy.value !== 'date_desc'
+)
 
 function formatAmount(amount: number) {
   if (amount >= 10000) {
@@ -341,15 +463,21 @@ function editItem(item: Item) {
   showAddModal.value = true
 }
 
-async function deleteItem(id: number) {
-  if (!confirm('确定要删除这件物品吗？')) return
+function askDelete(id: number) {
+  pendingDelete.value = items.value.find(item => item.id === id) || null
+}
+
+async function confirmDelete() {
+  const target = pendingDelete.value
+  if (!target) return
+  pendingDelete.value = null
 
   try {
-    await itemsApi.deleteItem(id)
-    items.value = items.value.filter(item => item.id !== id)
+    await itemsApi.deleteItem(target.id)
+    items.value = items.value.filter(item => item.id !== target.id)
   } catch (error) {
     console.error('Failed to delete item:', error)
-    alert('删除失败')
+    alert('删除失败，请稍后重试')
   }
 }
 

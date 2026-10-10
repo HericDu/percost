@@ -4,25 +4,190 @@
 
 @layer base {
   :root {
-    --glass-bg: rgba(255, 255, 255, 0.4);
-    --glass-bg-hover: rgba(255, 255, 255, 0.55);
-    --glass-border: rgba(255, 255, 255, 0.55);
-    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-    --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 0 rgba(255, 255, 255, 0.15);
+    /* ===== 液态玻璃材质 =====
+       真实玻璃的观感由四层叠加而成：
+       1) 透光底色   2) 背景模糊+增彩（折射）
+       3) 边缘高光（光线在玻璃厚度上的反射）  4) 边缘色散（彩边） */
+    /* 背景已是白色主调，玻璃可以更通透；增彩交由 saturate 负责 */
+    --lg-tint: rgba(255, 255, 255, 0.58);
+    --lg-tint-strong: rgba(255, 255, 255, 0.72);
+    --lg-blur: 24px;
+    /* 适度增彩：让透过玻璃的淡彩比背景更明确，但不夸张 */
+    --lg-saturate: 180%;
+
+    /* 边缘：顶部受光更亮，底部承接反射，左右略暗 —— 模拟厚玻璃的立体感 */
+    --lg-edge:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.92),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.42),
+      inset 1px 0 0 0 rgba(255, 255, 255, 0.5),
+      inset -1px 0 0 0 rgba(255, 255, 255, 0.5),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+
+    --lg-drop:
+      0 1px 2px rgba(22, 18, 48, 0.04),
+      0 8px 24px -6px rgba(22, 18, 48, 0.1),
+      0 20px 48px -16px rgba(60, 40, 130, 0.14);
+
+    --lg-drop-lifted:
+      0 2px 4px rgba(22, 18, 48, 0.05),
+      0 14px 36px -8px rgba(22, 18, 48, 0.13),
+      0 32px 70px -20px rgba(60, 40, 130, 0.2);
+
+    /* 兼容旧类名 */
+    --glass-bg: var(--lg-tint);
+    --glass-bg-hover: var(--lg-tint-strong);
+    --glass-border: rgba(255, 255, 255, 0.6);
+    --glass-shadow: var(--lg-drop);
+    --glass-inner-shadow: var(--lg-edge);
+
+    /* 指标色：统一明度/彩度的同调色环，替代明暗不一的 Tailwind 默认色阶 */
+    --metric-1: oklch(0.58 0.19 277);   /* 靛 - 总数 */
+    --metric-2: oklch(0.58 0.19 318);   /* 紫 - 投资 */
+    --metric-3: oklch(0.58 0.16 235);   /* 蓝 - 均价 */
+    --metric-4: oklch(0.6 0.16 168);    /* 青绿 - 在用 */
+
+    /* 成本档位语义色 */
+    --cost-low: oklch(0.56 0.15 162);
+    --cost-mid: oklch(0.62 0.16 72);
+    --cost-high: oklch(0.58 0.2 18);
+
+    /* 间距节奏：区块之间用大间距，区块内用小间距 */
+    --gap-section: clamp(0.875rem, 1.6vw, 1.25rem);
+    --gap-grid: clamp(0.75rem, 1.4vw, 1.125rem);
+
+
   }
 
   .dark {
-    --glass-bg: rgba(17, 24, 39, 0.6);
-    --glass-bg-hover: rgba(17, 24, 39, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --lg-tint: rgba(22, 22, 40, 0.5);
+    --lg-tint-strong: rgba(28, 28, 50, 0.66);
+    --lg-edge:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.16),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    --lg-drop: 0 8px 28px -6px rgba(0, 0, 0, 0.44);
+    --lg-drop-lifted: 0 18px 46px -10px rgba(0, 0, 0, 0.56);
+    --glass-border: rgba(255, 255, 255, 0.12);
   }
 
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+
+}
+
+
+/* ========== 动态光斑背景（置于 base 层外，避免被 Tailwind preflight 覆盖） ========== */
+
+/* ===== 动态光斑背景 =====
+   白色为绝对主调，六团低饱和光斑各自独立周期漂移。
+   每团只负责一个色相，靠 orb 层的缓慢错位叠加混出中间色 ——
+   这比一次性堆高饱和度更能拉开色域，同时保持整体轻盈。 */
+.app-shell {
+  position: relative;
+  isolation: isolate;
+  background-color: #fcfcfd;
+  overflow-x: hidden;
+}
+
+.orb-field {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  /* 整体去饱和，保证任何叠加区都不会压过前景文字 */
+  filter: saturate(0.78);
+}
+
+/* 白色蒙版：压在光斑之上，把整体基调拉回白色，
+   同时保留足够色相信息供玻璃折射 */
+.orb-field::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+  /* blur 让边界彻底溶解，是「光」而非「色块」的关键 */
+  filter: blur(78px);
+  opacity: 0.78;
+}
+
+/* 色相覆盖 268→212→338→168→92→302，几乎绕满整个色环；
+   彩度压到 0.07–0.085 —— 色域仍广，但每一团都极淡 */
+.orb-1 {
+  width: 52vmax; height: 52vmax; top: -14%; left: -8%;
+  background: radial-gradient(circle, oklch(0.87 0.085 268) 0%, oklch(0.87 0.085 268 / 0.3) 45%, transparent 72%);
+  animation: orb-a 38s ease-in-out infinite;
+}
+.orb-2 {
+  width: 46vmax; height: 46vmax; top: -10%; right: -10%;
+  background: radial-gradient(circle, oklch(0.88 0.075 212) 0%, oklch(0.88 0.075 212 / 0.3) 45%, transparent 72%);
+  animation: orb-b 47s ease-in-out infinite;
+}
+.orb-3 {
+  width: 48vmax; height: 48vmax; bottom: -16%; left: 16%;
+  background: radial-gradient(circle, oklch(0.88 0.08 338) 0%, oklch(0.88 0.08 338 / 0.3) 45%, transparent 72%);
+  animation: orb-c 53s ease-in-out infinite;
+}
+.orb-4 {
+  width: 42vmax; height: 42vmax; top: 30%; right: 4%;
+  background: radial-gradient(circle, oklch(0.9 0.075 168) 0%, oklch(0.9 0.075 168 / 0.3) 45%, transparent 72%);
+  animation: orb-d 61s ease-in-out infinite;
+}
+.orb-5 {
+  width: 38vmax; height: 38vmax; bottom: 2%; right: 20%;
+  background: radial-gradient(circle, oklch(0.92 0.07 92) 0%, oklch(0.92 0.07 92 / 0.3) 45%, transparent 72%);
+  animation: orb-e 43s ease-in-out infinite;
+}
+.orb-6 {
+  width: 40vmax; height: 40vmax; top: 42%; left: -6%;
+  background: radial-gradient(circle, oklch(0.89 0.07 302) 0%, oklch(0.89 0.07 302 / 0.3) 45%, transparent 72%);
+  animation: orb-f 67s ease-in-out infinite;
+}
+
+/* 六条互质周期（38/47/53/61/43/67 秒）—— 组合周期极长，肉眼无法察觉循环 */
+@keyframes orb-a {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(16%, 12%) scale(1.16); }
+}
+@keyframes orb-b {
+  0%,100% { transform: translate(0,0) scale(1.08); }
+  50%     { transform: translate(-14%, 18%) scale(1); }
+}
+@keyframes orb-c {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(18%, -14%) scale(1.12); }
+}
+@keyframes orb-d {
+  0%,100% { transform: translate(0,0) scale(1.1); }
+  50%     { transform: translate(-16%, -10%) scale(1); }
+}
+@keyframes orb-e {
+  0%,100% { transform: translate(0,0) scale(1); }
+  50%     { transform: translate(-12%, -16%) scale(1.14); }
+}
+@keyframes orb-f {
+  0%,100% { transform: translate(0,0) scale(1.06); }
+  50%     { transform: translate(14%, -12%) scale(1); }
+}
+
+.dark .app-shell { background-color: #07070f; }
+.dark .orb { opacity: 0.3; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orb { animation: none; }
+}
+
+/* 窄屏降低模糊半径，避免大面积 blur 在移动端掉帧 */
+@media (max-width: 640px) {
+  .orb { filter: blur(46px); opacity: 0.5; }
 }
 
 /* 自定义滚动条样式 */
@@ -36,11 +201,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300/60 rounded-full;
+  background: rgba(188, 188, 206, 0.5);
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400/80;
+  background: rgba(154, 154, 176, 0.7);
 }
 
 /* 隐藏横向滚动条 */
@@ -52,115 +218,470 @@
   display: none;
 }
 
-/* ========== 液态玻璃效果 ========== */
+/* ========== 液态玻璃材质 ==========
+   参考 rdev/liquid-glass-react 的分层思路，用纯 CSS 复刻：
+   折射层(backdrop-filter) + 镜面高光(::before) + 边缘色散(::after) + 厚度边缘(inset shadow)。
+   不用 SVG feDisplacementMap —— Safari 不支持 backdrop-filter: url()，
+   跨浏览器会直接变成一块死白板。 */
 
-/* 玻璃通用 */
+.lg {
+  position: relative;
+  isolation: isolate;
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  box-shadow: var(--lg-edge), var(--lg-drop);
+  transition:
+    background 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 镜面高光：光从左上入射，在玻璃表面形成一道弧形反光 */
+.lg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    linear-gradient(
+      142deg,
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.28) 24%,
+      transparent 46%,
+      transparent 68%,
+      rgba(255, 255, 255, 0.16) 100%
+    );
+  opacity: 0.9;
+}
+
+/* 边缘色散：玻璃厚边的彩虹折射，是液态玻璃区别于普通毛玻璃的关键细节 */
+.lg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.82 0.12 285 / 0.42) 0%,
+    transparent 28%,
+    transparent 62%,
+    oklch(0.86 0.1 215 / 0.34) 82%,
+    oklch(0.88 0.09 330 / 0.28) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0.85;
+}
+
+/* 可交互玻璃：悬停时「吸光」—— 增亮、抬升、投影扩散 */
+.lg-interactive {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lg-interactive:hover {
+  background: var(--lg-tint-strong);
+  box-shadow: var(--lg-edge), var(--lg-drop-lifted);
+  transform: translateY(-2px);
+}
+
+.lg-interactive:active {
+  transform: translateY(0) scale(0.985);
+  transition-duration: 0.12s;
+}
+
+/* ===== 兼容旧类名，统一走新材质 ===== */
+
 .glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
   border-bottom: 1px solid var(--glass-border);
 }
 
-/* 玻璃卡片 - 带顶部高光 */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(28px) saturate(220%);
-  -webkit-backdrop-filter: blur(28px) saturate(220%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-inner-shadow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.2s ease;
   position: relative;
-  overflow: hidden;
+  isolation: isolate;
+  background: var(--lg-tint);
+  backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+  box-shadow: var(--lg-edge), var(--lg-drop);
+  transition:
+    background 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* 卡片顶部高光 */
 .glass-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
+  inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  z-index: 0;
-}
-
-/* 卡片内容层 */
-.glass-card > * {
-  position: relative;
-  z-index: 1;
+  z-index: -1;
+  background: linear-gradient(
+    142deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0.26) 24%,
+    transparent 46%,
+    transparent 70%,
+    rgba(255, 255, 255, 0.14) 100%
+  );
 }
 
 .glass-card:hover {
-  box-shadow: var(--glass-shadow), var(--glass-inner-shadow),
-    0 16px 48px rgba(99, 102, 241, 0.08);
-  background: var(--glass-bg-hover);
+  background: var(--lg-tint-strong);
+  box-shadow: var(--lg-edge), var(--lg-drop-lifted);
 }
 
 /* 玻璃按钮 */
 .glass-button {
   position: relative;
+  isolation: isolate;
   overflow: hidden;
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-inner-shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--lg-tint);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: var(--lg-edge), 0 1px 3px rgba(22, 18, 48, 0.06);
+  transition:
+    background 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* 掠过式反光 */
 .glass-button::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 60%;
+  left: -120%;
+  width: 70%;
   height: 100%;
+  pointer-events: none;
   background: linear-gradient(
-    120deg,
+    110deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.35) 50%,
+    rgba(255, 255, 255, 0.55) 50%,
     transparent 100%
   );
-  transition: left 0s ease;
+  transition: left 0s;
 }
 
 .glass-button:hover::before {
-  left: 100%;
-  transition: left 0.6s ease-out;
+  left: 130%;
+  transition: left 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-button:hover {
+  background: var(--lg-tint-strong);
   transform: translateY(-1px);
-  box-shadow: var(--glass-shadow), var(--glass-inner-shadow),
-    0 4px 16px rgba(99, 102, 241, 0.1);
+  box-shadow: var(--lg-edge), var(--lg-drop);
 }
 
 .glass-button:active {
-  transform: scale(0.97);
-  filter: brightness(0.95);
-  transition: transform 0.1s ease, filter 0.1s ease;
+  transform: scale(0.96);
+  transition-duration: 0.1s;
+}
+
+/* ========== 统一控件规格 ==========
+   顶部所有交互控件共享同一套盒模型：36px 高、药丸圆角、13px 字号。
+   尺寸与圆角一致，视觉上才能成为一组，而不是散落的零件。 */
+
+.ctl {
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1;
+  color: #45455c;
+  background: rgba(255, 255, 255, 0.62);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  /* 加强投影：浅色玻璃背景上需要更实的阴影才能分离出层次 */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 1px 2px rgba(22, 18, 48, 0.06),
+    0 3px 8px -2px rgba(22, 18, 48, 0.1);
+  transition:
+    background 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ctl:hover {
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 2px 4px rgba(22, 18, 48, 0.07),
+    0 6px 14px -3px rgba(22, 18, 48, 0.13);
+}
+
+/* 焦点环用 box-shadow 扩散而非 outline —— outline 不跟随 border-radius，
+   在药丸形控件上会渲染成直角方框 */
+.ctl:focus,
+.ctl:focus-visible {
+  outline: none;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 0 3px oklch(0.58 0.19 277 / 0.18),
+    0 4px 14px oklch(0.58 0.19 277 / 0.14);
+}
+
+/* 覆盖全局 :focus-visible 的方形 outline */
+.ctl:focus-visible,
+.ctl-compact .ctl-select:focus-visible,
+.field-input:focus-visible {
+  outline: none;
+}
+
+.ctl-input { padding-right: 12px; }
+.ctl-input::placeholder { color: #9a9ab0; }
+
+.ctl-select {
+  padding-left: 12px;
+  padding-right: 8px;
+  cursor: pointer;
+  max-width: 134px;
+}
+
+/* 紧凑选择器容器：宽屏显示文字，窄屏塌缩为图标 */
+.ctl-compact { position: relative; }
+.ctl-compact-icon { display: none; }
+
+@media (max-width: 1023px) {
+  .ctl-compact {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    color: #78788f;
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+      inset 0 1px 0 rgba(255, 255, 255, 0.95),
+      0 1px 2px rgba(22, 18, 48, 0.06),
+      0 3px 8px -2px rgba(22, 18, 48, 0.1);
+  }
+
+  .ctl-compact-icon {
+    display: block;
+    width: 15px;
+    height: 15px;
+    pointer-events: none;
+  }
+
+  /* select 透明覆盖整个图标区域，点击仍调起系统原生选择器 */
+  .ctl-compact .ctl-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    opacity: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+}
+
+/* 图标按钮：正圆，直径与其余控件等高，保证基线对齐 */
+.ctl-icon {
+  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #78788f;
+  cursor: pointer;
+}
+
+.ctl-icon:hover {
+  background: rgba(255, 255, 255, 0.85);
+  color: #45455c;
+}
+
+.ctl-icon:active { transform: scale(0.94); }
+
+/* ========== 表单字段 ==========
+   登录页与物品弹窗共用。标签、输入框、错误提示三者规格统一，
+   避免同一套设计语言在不同页面出现偏移。 */
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: #78788f;
+  margin-bottom: 8px;
+}
+
+.field-hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: #bcbcce;
+  margin-left: 5px;
+  letter-spacing: 0;
+}
+
+.field-input {
+  width: 100%;
+  padding: 11px 15px;
+  border: none;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #2d2d44;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(14px) saturate(170%);
+  -webkit-backdrop-filter: blur(14px) saturate(170%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(22, 18, 48, 0.04);
+  transition:
+    background 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.field-input::placeholder { color: #bcbcce; }
+
+.field-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+    0 0 0 3.5px oklch(0.58 0.19 277 / 0.15),
+    0 4px 14px oklch(0.58 0.19 277 / 0.1);
+}
+
+select.field-input { cursor: pointer; }
+textarea.field-input { resize: none; }
+
+.form-error {
+  font-size: 12.5px;
+  text-align: center;
+  font-weight: 500;
+  color: var(--cost-high);
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: color-mix(in oklch, var(--cost-high) 9%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cost-high) 16%, transparent);
+}
+
+/* ========== Emoji 选择器 ========== */
+
+.emoji-panel {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* 分类胶囊：未选中保持极低存在感，选中才上实色 */
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: #78788f;
+  background: rgba(255, 255, 255, 0.52);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  transition:
+    color 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.chip:hover { background: rgba(255, 255, 255, 0.78); color: #45455c; }
+
+.chip-active {
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(140deg, oklch(0.62 0.2 280), oklch(0.55 0.21 300));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 8px oklch(0.58 0.19 285 / 0.32);
+}
+
+.emoji-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 14px;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.emoji-tile:hover { background: rgba(255, 255, 255, 0.7); }
+.emoji-tile:active { transform: scale(0.94); }
+
+.emoji-tile-active {
+  background: color-mix(in oklch, oklch(0.6 0.2 282) 11%, transparent);
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklch, oklch(0.6 0.2 282) 38%, transparent);
+}
+
+/* 品牌字标：收紧字距 + 渐变填充 */
+.brand-wordmark {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  background: linear-gradient(130deg, oklch(0.6 0.2 280), oklch(0.52 0.21 305));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* 玻璃输入框 */
 .glass-input {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(200, 200, 210, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
-  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.46);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  border: none;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(22, 18, 48, 0.04);
+  transition:
+    background 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .glass-input:focus {
-  background: rgba(255, 255, 255, 0.75);
-  border-color: rgba(99, 102, 241, 0.45);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 0 0 3px rgba(99, 102, 241, 0.12),
-    0 4px 12px rgba(99, 102, 241, 0.08);
+  outline: none;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 3.5px oklch(0.58 0.19 277 / 0.16),
+    0 4px 14px oklch(0.58 0.19 277 / 0.12);
 }
 
 .dark .glass-input {
@@ -187,20 +708,56 @@
   transition: transform 0.1s ease, filter 0.1s ease;
 }
 
-/* ========== 标签 ========== */
+/* ========== 卡片标题 ========== */
+
+/* 最多两行，超出省略。固定 2 行高度，使有/无换行的卡片高度一致 */
+.item-name {
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1a1a2e;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  min-height: calc(18px * 1.3 * 2);
+}
+
+.item-cat {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: #9a9ab0;
+  min-width: 0;
+}
+
+/* ========== 状态标签 ========== */
+
+.badge-expired,
+.badge-active {
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
 
 .badge-expired {
-  @apply text-xs font-medium px-2 py-0.5 rounded-full;
-  background: rgba(239, 68, 68, 0.1);
-  color: #EF4444;
-  border: 1px solid rgba(239, 68, 68, 0.15);
+  background: color-mix(in oklch, var(--cost-high) 12%, transparent);
+  color: var(--cost-high);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cost-high) 22%, transparent);
 }
 
 .badge-active {
-  @apply text-xs font-medium px-2 py-0.5 rounded-full;
-  background: rgba(16, 185, 129, 0.1);
-  color: #10B981;
-  border: 1px solid rgba(16, 185, 129, 0.15);
+  background: color-mix(in oklch, var(--cost-low) 12%, transparent);
+  color: var(--cost-low);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--cost-low) 22%, transparent);
 }
 
 /* ========== 金额 placeholder ========== */
@@ -213,10 +770,605 @@
   color: #4B5563;
 }
 
+/* ========== 数字排版 ========== */
+
+/* 等宽数字：金额/计数纵向对齐，扫读时数位不跳动 */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ========== 指标卡图标底色 ========== */
+
+.metric-ico {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--metric);
+  background: color-mix(in oklch, var(--metric) 13%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--metric) 18%, transparent);
+}
+
+.metric-1 { --metric: var(--metric-1); }
+.metric-2 { --metric: var(--metric-2); }
+.metric-3 { --metric: var(--metric-3); }
+.metric-4 { --metric: var(--metric-4); }
+
+/* ========== 顶部 Dock 栅格 ==========
+   用 Grid 做硬性比例分割：左右两栏各占固定份额，互不侵占，
+   任何视窗宽度下都保持左右结构，绝不换行。 */
+
+.dock-row {
+  display: grid;
+  grid-template-columns: 60fr 40fr;
+  align-items: center;
+  column-gap: 12px;
+}
+
+@media (min-width: 1280px) {
+  .dock-row { grid-template-columns: 62fr 38fr; column-gap: 16px; }
+}
+
+.dock-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* 指标轨道：窄屏横向滚动时右侧渐隐，暗示「还有内容」 */
+@media (max-width: 1279px) {
+  .metric-rail {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent 100%);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 1.5rem), transparent 100%);
+  }
+}
+
+/* ========== 顶部指标单元 ==========
+   与卡片同一套层级规则：数值主、标签辅。
+   顶部 3px 色条承担「这是哪一类数据」的识别功能，取代图标。 */
+
+.stat-cell {
+  position: relative;
+  padding: 1px 24px 0;
+  min-width: 0;
+}
+
+.stat-cell:first-child { padding-left: 8px; }
+
+.stat-cell::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24px;
+  width: 26px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--metric);
+}
+
+.stat-cell:first-child::before { left: 8px; }
+
+.stat-divided {
+  border-left: 1px solid;
+  border-image: linear-gradient(180deg, transparent, rgba(154, 154, 176, 0.28) 30%, rgba(154, 154, 176, 0.28) 70%, transparent) 1;
+}
+
+.stat-value {
+  margin-top: 16px;
+  font-size: 41px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.045em;
+  color: #1a1a2e;
+  white-space: nowrap;
+}
+
+/* 单位与后缀统一降级：体量约为数值的一半，颜色退到次级灰 */
+.stat-unit,
+.stat-suffix {
+  font-size: 0.55em;
+  font-weight: 600;
+  color: #78788f;
+}
+
+.stat-unit { margin-right: 1px; vertical-align: 0.08em; }
+.stat-suffix { margin-left: 1.5px; }
+
+.stat-label {
+  margin-top: 11px;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #9a9ab0;
+  white-space: nowrap;
+}
+
+/* 窄屏：指标让出空间给搜索框，自身改为横向滚动 */
+@media (max-width: 767px) {
+  .stat-cell { padding-left: 12px; padding-right: 12px; }
+  .stat-cell::before { left: 12px; width: 20px; }
+  .stat-value { font-size: 28px; margin-top: 13px; }
+  .stat-label { font-size: 11.5px; margin-top: 8px; }
+}
+
+/* ========== 成本主信息区 ==========
+   导向标识的核心规则：同一视域内只允许一个「主级」信息。
+   这里把均摊成本做成绝对主角 —— 字号是次级信息的 2.6 倍，
+   并用色块锚定，使其在卡片阵列中形成可被快速扫描的节律。 */
+
+/* ========== 卡片骨架 ==========
+   核心：左右两列同属一个 Grid，共享三条行轨道。
+   行高由左右内容共同决定，因此两侧文字逐行自动对齐 ——
+   这比分别排版再手工调间距可靠得多。
+
+   列：[左内容 1fr] [分割线 1px] [右数据 30%]
+   行：① emoji+分类  ② 名称  ③ 成本 */
+
+/* 四边等宽内边距 */
+.card-pad { padding: 26px; }
+
+/* 左右分栏：左 1fr，右固定比例。两侧各自垂直撑开，
+   左侧两组（标识 / 成本）顶底对齐，右侧三项等距分布。 */
+.card-body {
+  display: flex;
+  align-items: stretch;
+  gap: 26px;
+  min-height: 134px;
+}
+
+/* ---- 左栏：两组内容上下撑开 ---- */
+
+.card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+/* 分类行与名称紧密成组 —— 它们共同回答「这是什么」 */
+.id-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.card-row-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 22px;  /* 有/无状态标签时高度一致 */
+}
+
+.card-emoji {
+  font-size: 17px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.card-cost { min-width: 0; }
+
+/* ---- 右栏：三项等距，左边框即分割线（随容器自动贯通） ---- */
+
+.card-side {
+  flex: 0 0 31%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 17px;
+  padding-left: 22px;
+  border-left: 1px solid rgba(120, 120, 143, 0.18);
+}
+
+/* 单列时卡片变宽，固定高度会显得空旷：放开最小高度，由内容决定 */
+@media (max-width: 639px) {
+  .cost-hero-value { font-size: 32px; }
+  .card-pad { padding: 20px; }
+  .card-body { min-height: 0; gap: 20px; }
+  .card-main { gap: 18px; }
+  .card-side { padding-left: 20px; gap: 14px; }
+}
+
+.cost-hero-label {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: #9a9ab0;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
+/* 字号随列宽流动：单列时无需过大，多列时保证远距离可辨。
+   放大字号可在间距不变的情况下让版面显得更紧凑 */
+.cost-hero-value {
+  font-size: clamp(36px, 2.9vw, 43px);
+  line-height: 0.88;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--tone);
+}
+
+/* 货币符号降级：它是单位不是数值，不该与数字争夺视觉权重 */
+.cost-hero-unit {
+  font-size: 0.58em;
+  font-weight: 600;
+  margin-right: 1px;
+  vertical-align: 0.1em;
+  opacity: 0.72;
+}
+
+.tone-good { --tone: var(--cost-low); }
+.tone-fair { --tone: var(--cost-mid); }
+.tone-high { --tone: var(--cost-high); }
+
+/* ========== 次级信息（卡片右栏） ==========
+   三项等权纵向排列。非主级信息一律统一字号、字重与颜色，
+   用右对齐和等距建立秩序，而不是靠粗细差异制造层级。 */
+
+.meta-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  text-align: center;
+}
+
+/* 计数行：加减按钮与数值同行，不额外占据纵向空间 */
+.usage-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.step-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  color: #78788f;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(22, 18, 48, 0.07);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.step-btn:hover {
+  background: #fff;
+  color: #45455c;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.95),
+    0 2px 6px rgba(22, 18, 48, 0.11);
+}
+
+.step-btn:active { transform: scale(0.88); }
+
+.step-btn-add:hover { color: oklch(0.56 0.15 162); }
+
+/* ========== 卡片操作按钮 ==========
+   悬浮于卡片顶部中央：位置居中便于定位，又不与左右两栏内容冲突。
+   绝对定位 + 悬停显形，完全不参与布局计算。 */
+
+.card-actions {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -42%);
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.glass-card:hover .card-actions,
+.card-actions:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%);
+}
+
+.act-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: #78788f;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px) saturate(170%);
+  -webkit-backdrop-filter: blur(12px) saturate(170%);
+  /* 轻微阴影：足以从卡片表面分离，又不喧宾夺主 */
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(22, 18, 48, 0.08),
+    0 4px 10px -2px rgba(22, 18, 48, 0.12);
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.act-btn:hover {
+  color: #2d2d44;
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 1),
+    0 2px 4px rgba(22, 18, 48, 0.1),
+    0 7px 16px -3px rgba(22, 18, 48, 0.16);
+}
+
+.act-btn:active { transform: scale(0.92); }
+
+.act-btn-danger { color: oklch(0.62 0.18 20); }
+.act-btn-danger:hover { color: oklch(0.55 0.21 20); }
+
+.meta-label {
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: #9a9ab0;
+  white-space: nowrap;
+}
+
+.meta-value {
+  font-size: 19px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #2d2d44;
+  white-space: nowrap;
+}
+
+.meta-unit {
+  font-size: 12px;
+  font-weight: 400;
+  color: #9a9ab0;
+  margin-left: 1px;
+}
+
+
+
+/* ========== 分页 ========== */
+
+.page-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.875rem;
+  height: 1.875rem;
+  padding: 0 0.375rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: #5c5c75;
+  border-radius: 999px;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.page-btn:hover:not(:disabled):not(.is-active) {
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+  color: #2d2d44;
+}
+
+.page-btn:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.page-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* 当前页：实心药丸，是整条分页器上唯一的高饱和元素。
+   投影用负扩散收紧，避免在小尺寸按钮周围形成一圈可见紫色光晕 */
+.page-btn.is-active {
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(140deg, oklch(0.62 0.2 280), oklch(0.55 0.21 300));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 5px -1px oklch(0.55 0.19 288 / 0.4);
+}
+
+.page-btn.is-active:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 3px 8px -2px oklch(0.55 0.19 288 / 0.5);
+}
+
+/* overflow-x: auto 会同时裁切垂直方向的 box-shadow，
+   用上下 padding + 等量负 margin 把可视区外扩，投影即可完整显示 */
+.page-track {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-top: -5px;
+  margin-bottom: -5px;
+}
+
+.page-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.125rem;
+  height: 1.875rem;
+  color: #bcbcce;
+  font-size: 0.75rem;
+  user-select: none;
+}
+
+/* ========== 浮动主操作按钮 ========== */
+
+.fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.fab:active { transform: scale(0.92); transition-duration: 0.1s; }
+
+.fab-primary {
+  width: 3.25rem;
+  height: 3.25rem;
+  color: #fff;
+  background: linear-gradient(140deg, oklch(0.64 0.2 280), oklch(0.54 0.22 302));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 4px 14px oklch(0.58 0.2 288 / 0.4),
+    0 12px 32px -8px oklch(0.58 0.2 288 / 0.5);
+}
+
+.fab-primary:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 6px 20px oklch(0.58 0.2 288 / 0.46),
+    0 18px 44px -10px oklch(0.58 0.2 288 / 0.56);
+}
+
+/* 次要操作：玻璃材质，不与主按钮争夺注意力 */
+.fab-ghost {
+  width: 2.5rem;
+  height: 2.5rem;
+  color: oklch(0.55 0.19 18);
+  background: var(--lg-tint);
+  backdrop-filter: blur(14px) saturate(180%);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  box-shadow: var(--lg-edge), var(--lg-drop);
+}
+
+.fab-ghost:hover {
+  background: var(--lg-tint-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--lg-edge), var(--lg-drop-lifted);
+}
+
+/* ========== 实心按钮 ========== */
+
+.btn-solid,
+.btn-danger {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.btn-solid {
+  background: linear-gradient(140deg, oklch(0.64 0.2 280), oklch(0.54 0.22 302));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 3px 12px oklch(0.58 0.2 288 / 0.34);
+}
+
+.btn-solid:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 6px 20px oklch(0.58 0.2 288 / 0.44);
+}
+
+.btn-danger {
+  background: linear-gradient(140deg, oklch(0.63 0.21 20), oklch(0.54 0.22 14));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 3px 12px oklch(0.58 0.21 18 / 0.34);
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 6px 20px oklch(0.58 0.21 18 / 0.44);
+}
+
+.btn-solid:active,
+.btn-danger:active { transform: scale(0.97); transition-duration: 0.1s; }
+
+/* ========== 入场动效 ========== */
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+.card-enter {
+  animation: card-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-in {
+  animation: modal-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-enter,
+  .modal-in { animation: none; }
+}
+
 /* ========== 全局过渡 ========== */
 
+/* 只过渡会变化的属性：transition-all 会把 width/height 等布局属性一起动画化，引发重排抖动 */
 input, select, textarea, button, a {
-  transition: all 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* 键盘可达性：统一焦点环，鼠标点击不显示。
+   不设 border-radius —— outline 会自动跟随元素自身圆角，
+   写死 8px 反而会让药丸形控件出现直角方框 */
+:focus-visible {
+  outline: 2px solid oklch(0.58 0.17 277 / 0.7);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ========== 移动端优化 ========== */

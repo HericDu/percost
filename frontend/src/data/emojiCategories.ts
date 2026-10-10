@@ -16,7 +16,11 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '🔋', label: '电池' }, { icon: '⏱️', label: '秒表' }, { icon: '⏲️', label: '定时器' },
       { icon: '⏰', label: '闹钟' }, { icon: '⌚', label: '手表' }, { icon: '📞', label: '电话' }, { icon: '🖨️', label: '打印机' },
       { icon: '💽', label: '光盘' }, { icon: '💾', label: '软盘' }, { icon: '💿', label: 'CD' }, { icon: '📀', label: 'DVD' },
-      { icon: '📼', label: '录像带' }, { icon: '🎙️', label: '录音' }, { icon: '📺', label: '显示器' }
+      { icon: '📼', label: '录像带' }, { icon: '🎙️', label: '录音' }, { icon: '🖼️', label: '数码相框' },
+      { icon: '🔭', label: '望远镜' }, { icon: '🔬', label: '显微镜' }, { icon: '🧭', label: '指南针' }, { icon: '📐', label: '绘图仪' },
+      { icon: '💡', label: '智能灯' }, { icon: '🖥', label: '一体机' }, { icon: '🪫', label: '充电宝' }, { icon: '🔆', label: '投影仪' },
+      { icon: '📶', label: '路由器' }, { icon: '💳', label: '读卡器' }, { icon: '🛰️', label: '卫星' }, { icon: '🎛️', label: '调音台' },
+      { icon: '🎚️', label: '推子' }, { icon: '🧮', label: '计算器' }, { icon: '⌨', label: '机械键盘' }, { icon: '🖇️', label: '扩展坞' }
     ]
   },
   {
@@ -26,7 +30,11 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '🧹', label: '扫帚' }, { icon: '🧺', label: '洗衣篮' }, { icon: '🧻', label: '纸巾' }, { icon: '🪣', label: '水桶' }, { icon: '🧼', label: '肥皂' },
       { icon: '🧯', label: '灭火器' }, { icon: '🔑', label: '钥匙' }, { icon: '🔒', label: '锁' }, { icon: '🪟', label: '窗户' },
       { icon: '🚪', label: '门' }, { icon: '🪑', label: '椅子' }, { icon: '🛋️', label: '沙发' }, { icon: '🛏️', label: '床' }, { icon: '🧸', label: '玩偶' },
-      { icon: '🖼️', label: '画框' }, { icon: '🪞', label: '镜子' }, { icon: '🪜', label: '梯子' }, { icon: '🧳', label: '行李箱' }
+      { icon: '🖼️', label: '画框' }, { icon: '🪞', label: '镜子' }, { icon: '🪜', label: '梯子' }, { icon: '🧳', label: '行李箱' },
+      { icon: '🫖', label: '电热水壶' }, { icon: '☕', label: '咖啡机' }, { icon: '🍳', label: '炒锅' }, { icon: '🔥', label: '燃气灶' },
+      { icon: '🧊', label: '冰箱' }, { icon: '🍽️', label: '洗碗机' }, { icon: '🥘', label: '电饭煲' }, { icon: '🧇', label: '面包机' },
+      { icon: '🌀', label: '吹风机' }, { icon: '🪠', label: '马桶搋' }, { icon: '🚿', label: '花洒' }, { icon: '🚽', label: '智能马桶' },
+      { icon: '🪆', label: '摆件' }, { icon: '🕯️', label: '香薰' }, { icon: '🪴', label: '绿植' }, { icon: '🧰', label: '工具箱' }
     ]
   },
   {
@@ -36,7 +44,11 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '💊', label: '药品' }, { icon: '🩹', label: '创可贴' }, { icon: '🩺', label: '听诊器' }, { icon: '🪒', label: '剃刀' },
       { icon: '☂️', label: '雨伞' }, { icon: '🧣', label: '围巾' }, { icon: '🧤', label: '手套' }, { icon: '🧦', label: '袜子' },
       { icon: '💍', label: '戒指' }, { icon: '💎', label: '宝石' }, { icon: '🛍️', label: '购物袋' },
-      { icon: '🪡', label: '针线' }, { icon: '🧵', label: '线团' }, { icon: '🛁', label: '浴缸' }
+      { icon: '🪡', label: '针线' }, { icon: '🧵', label: '线团' }, { icon: '🛁', label: '浴缸' },
+      { icon: '🧃', label: '饮品' }, { icon: '🍶', label: '水杯' }, { icon: '🥤', label: '保温杯' }, { icon: '🧂', label: '调味料' },
+      { icon: '🪮', label: '梳子' }, { icon: '💄', label: '口红' }, { icon: '🧪', label: '护肤品' }, { icon: '🪞', label: '化妆镜' },
+      { icon: '😷', label: '口罩' }, { icon: '🩴', label: '拖鞋' }, { icon: '🛒', label: '购物车' }, { icon: '🗑️', label: '垃圾桶' },
+      { icon: '🧫', label: '保鲜盒' }, { icon: '🪢', label: '收纳' }, { icon: '🩸', label: '医疗' }, { icon: '🌂', label: '折叠伞' }
     ]
   },
   {
@@ -46,7 +58,11 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '👙', label: '比基尼' }, { icon: '👚', label: '衬衫' },
       { icon: '👛', label: '钱包' }, { icon: '👜', label: '手提包' }, { icon: '👝', label: '手拿包' }, { icon: '🎒', label: '背包' },
       { icon: '👞', label: '皮鞋' }, { icon: '👟', label: '运动鞋' }, { icon: '🥾', label: '靴子' }, { icon: '👠', label: '高跟鞋' }, { icon: '👢', label: '长靴' },
-      { icon: '👑', label: '皇冠' }, { icon: '🎓', label: '学士帽' }, { icon: '🧢', label: '鸭舌帽' }, { icon: '🧣', label: '围巾' }
+      { icon: '👑', label: '皇冠' }, { icon: '🎓', label: '学士帽' }, { icon: '🧢', label: '鸭舌帽' }, { icon: '🧣', label: '围巾' },
+      { icon: '🧥', label: '外套' }, { icon: '🥼', label: '风衣' }, { icon: '🦺', label: '马甲' }, { icon: '🩳', label: '短裤' },
+      { icon: '🩱', label: '泳衣' }, { icon: '👔', label: '领带' }, { icon: '🧦', label: '袜子' }, { icon: '🧤', label: '手套' },
+      { icon: '🕶️', label: '墨镜' }, { icon: '👓', label: '眼镜' }, { icon: '⌚', label: '腕表' }, { icon: '📿', label: '项链' },
+      { icon: '💍', label: '戒指' }, { icon: '👒', label: '遮阳帽' }, { icon: '🎩', label: '礼帽' }, { icon: '👡', label: '凉鞋' }
     ]
   },
   {
@@ -56,7 +72,12 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '🏐', label: '排球' }, { icon: '🏓', label: '乒乓球' }, { icon: '🏸', label: '羽毛球' }, { icon: '🏒', label: '冰球' },
       { icon: '🎯', label: '飞镖' }, { icon: '🏹', label: '射箭' }, { icon: '🎣', label: '钓鱼' }, { icon: '🥊', label: '拳击' }, { icon: '🥋', label: '柔道' },
       { icon: '🎽', label: '运动服' }, { icon: '🛹', label: '滑板' }, { icon: '🛷', label: '雪橇' }, { icon: '⛷️', label: '滑雪' }, { icon: '🏂', label: '单板' },
-      { icon: '🏋️', label: '举重' }, { icon: '🤼', label: '摔跤' }
+      { icon: '🏋️', label: '举重' }, { icon: '🤼', label: '摔跤' },
+      { icon: '🚴', label: '自行车' }, { icon: '🏊', label: '游泳' }, { icon: '🏃', label: '跑步' }, { icon: '🧘', label: '瑜伽' },
+      { icon: '⛳', label: '高尔夫' }, { icon: '🎿', label: '双板' }, { icon: '🛼', label: '轮滑' }, { icon: '🤿', label: '潜水' },
+      { icon: '🏄', label: '冲浪' }, { icon: '🧗', label: '攀岩' }, { icon: '🚵', label: '山地车' }, { icon: '⛸️', label: '溜冰' },
+      { icon: '🥅', label: '球门' }, { icon: '🪀', label: '健身器' }, { icon: '💪', label: '健身' }, { icon: '⛺', label: '露营' },
+      { icon: '🎒', label: '登山包' }, { icon: '🩺', label: '体检' }, { icon: '💊', label: '保健品' }, { icon: '🧴', label: '运动补剂' }
     ]
   },
   {
@@ -65,7 +86,11 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '🎲', label: '骰子' }, { icon: '🎴', label: '花牌' }, { icon: '🎵', label: '音符' }, { icon: '🎶', label: '音乐' }, { icon: '🎸', label: '吉他' },
       { icon: '🎹', label: '钢琴' }, { icon: '🥁', label: '鼓' }, { icon: '🎷', label: '萨克斯' }, { icon: '🎺', label: '喇叭' }, { icon: '🎻', label: '小提琴' },
       { icon: '🎬', label: '电影' }, { icon: '🎭', label: '戏剧' }, { icon: '🎨', label: '调色板' }, { icon: '🧩', label: '拼图' },
-      { icon: '🕹️', label: '游戏机' }, { icon: '🎮', label: '手柄' }, { icon: '🎪', label: '马戏' }, { icon: '🧸', label: '玩偶' }
+      { icon: '🕹️', label: '游戏机' }, { icon: '🎮', label: '手柄' }, { icon: '🎪', label: '马戏' }, { icon: '🧸', label: '玩偶' },
+      { icon: '🎤', label: 'KTV' }, { icon: '🎧', label: '音乐' }, { icon: '📽️', label: '放映机' }, { icon: '🍿', label: '观影' },
+      { icon: '🎰', label: '街机' }, { icon: '🃏', label: '桌游' }, { icon: '♟️', label: '棋类' }, { icon: '🀄', label: '麻将' },
+      { icon: '🎱', label: '台球' }, { icon: '🎳', label: '保龄球' }, { icon: '🪁', label: '风筝' }, { icon: '🛼', label: '娱乐' },
+      { icon: '📷', label: '摄影' }, { icon: '🎼', label: '乐谱' }, { icon: '🪘', label: '手鼓' }, { icon: '🪗', label: '手风琴' }
     ]
   },
   {
@@ -74,7 +99,11 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '📚', label: '书本' }, { icon: '📖', label: '打开的书' }, { icon: '📕', label: '红色书' }, { icon: '📗', label: '绿色书' }, { icon: '📘', label: '蓝色书' },
       { icon: '📓', label: '笔记本' }, { icon: '📝', label: '备忘录' }, { icon: '💼', label: '公文包' }, { icon: '📁', label: '文件夹' }, { icon: '📂', label: '打开文件夹' },
       { icon: '🗓️', label: '日历' }, { icon: '📋', label: '剪贴板' }, { icon: '📌', label: '图钉' }, { icon: '✏️', label: '铅笔' }, { icon: '🖊️', label: '钢笔' },
-      { icon: '🖨️', label: '打印机' }, { icon: '📎', label: '回形针' }, { icon: '📏', label: '直尺' }
+      { icon: '🖨️', label: '打印机' }, { icon: '📎', label: '回形针' }, { icon: '📏', label: '直尺' },
+      { icon: '📒', label: '账本' }, { icon: '📔', label: '手账' }, { icon: '🗂️', label: '文件盒' }, { icon: '🗄️', label: '档案柜' },
+      { icon: '🖍️', label: '彩笔' }, { icon: '🖌️', label: '画笔' }, { icon: '✂️', label: '剪刀' }, { icon: '📐', label: '三角尺' },
+      { icon: '🔖', label: '书签' }, { icon: '📑', label: '标签' }, { icon: '🗞️', label: '报刊' }, { icon: '📰', label: '杂志' },
+      { icon: '🧑‍💻', label: '工位' }, { icon: '🪑', label: '人体工学椅' }, { icon: '🗒️', label: '便签' }, { icon: '🧾', label: '票据' }
     ]
   },
   {
@@ -82,7 +111,11 @@ export const emojiCategories: EmojiCategory[] = [
     emojis: [
       { icon: '🌐', label: '全球网' }, { icon: '☁️', label: '云' }, { icon: '📊', label: '图表' }, { icon: '📈', label: '上升趋势' }, { icon: '📉', label: '下降趋势' },
       { icon: '⚙️', label: '设置' }, { icon: '🔧', label: '扳手' }, { icon: '🛠️', label: '工具' }, { icon: '🔗', label: '链接' }, { icon: '🔒', label: '安全' },
-      { icon: '🤖', label: '机器人' }, { icon: '💬', label: '聊天' }, { icon: '🧬', label: 'DNA' }, { icon: '🔭', label: '望远镜' }, { icon: '🔬', label: '显微镜' }
+      { icon: '🤖', label: '机器人' }, { icon: '💬', label: '聊天' }, { icon: '🧬', label: 'DNA' }, { icon: '🔭', label: '望远镜' }, { icon: '🔬', label: '显微镜' },
+      { icon: '📲', label: 'App' }, { icon: '💿', label: '软件' }, { icon: '🎞️', label: '视频会员' }, { icon: '🎵', label: '音乐会员' },
+      { icon: '📡', label: '宽带' }, { icon: '📶', label: '流量套餐' }, { icon: '🔑', label: '授权' }, { icon: '🛡️', label: '安全服务' },
+      { icon: '💾', label: '云存储' }, { icon: '🗃️', label: '数据库' }, { icon: '🧩', label: '插件' }, { icon: '🖇️', label: '集成' },
+      { icon: '📬', label: '邮箱' }, { icon: '🏷️', label: '订阅' }, { icon: '💹', label: '理财' }, { icon: '🪪', label: '会员卡' }
     ]
   },
   {
@@ -92,7 +125,12 @@ export const emojiCategories: EmojiCategory[] = [
       { icon: '🏡', label: '房子' }, { icon: '🏢', label: '办公楼' }, { icon: '🏥', label: '医院' }, { icon: '🏦', label: '银行' },
       { icon: '🏫', label: '学校' }, { icon: '🏭', label: '工厂' }, { icon: '🏰', label: '城堡' }, { icon: '🗼', label: '东京塔' },
       { icon: '🗽', label: '自由女神' }, { icon: '🏞️', label: '公园' }, { icon: '🌅', label: '日出' }, { icon: '🌆', label: '黄昏' },
-      { icon: '🌃', label: '夜景' }, { icon: '🌌', label: '星空' }, { icon: '🌉', label: '夜景桥' }
+      { icon: '🌃', label: '夜景' }, { icon: '🌌', label: '星空' }, { icon: '🌉', label: '夜景桥' },
+      { icon: '🚗', label: '汽车' }, { icon: '🏍️', label: '摩托车' }, { icon: '🛵', label: '电动车' }, { icon: '🚲', label: '单车' },
+      { icon: '⛽', label: '加油' }, { icon: '🔋', label: '充电' }, { icon: '🅿️', label: '停车' }, { icon: '✈️', label: '机票' },
+      { icon: '🚄', label: '高铁' }, { icon: '🛳️', label: '邮轮' }, { icon: '🏨', label: '酒店' }, { icon: '🧳', label: '旅行' },
+      { icon: '🐶', label: '宠物' }, { icon: '🪴', label: '植物' }, { icon: '🍼', label: '母婴' }, { icon: '🧴', label: '日耗品' },
+      { icon: '💰', label: '支出' }, { icon: '🧧', label: '礼金' }, { icon: '🛠️', label: '维修' }, { icon: '📄', label: '其他' }
     ]
   }
 ]

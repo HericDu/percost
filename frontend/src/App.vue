@@ -1,5 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-indigo-50/80 via-purple-30/60 to-blue-50/70 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/50">
+  <div class="app-shell min-h-screen">
+    <!-- 动态光斑背景层 -->
+    <div class="orb-field" aria-hidden="true">
+      <div v-for="n in 6" :key="n" class="orb" :class="`orb-${n}`" />
+    </div>
     <router-view />
   </div>
 </template>

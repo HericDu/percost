@@ -1,59 +1,56 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center px-4">
-    <div class="max-w-md w-full">
-      <div class="bg-white/80 backdrop-blur-2xl rounded-[1.75rem] p-8 border border-white/50 shadow-2xl">
-        <div class="text-center mb-8">
-          <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-            Percost
-          </h1>
-          <p class="text-gray-400 mt-2 text-sm">智能物品成本管理</p>
-        </div>
+  <div class="min-h-screen flex flex-col items-center justify-center px-4 py-10">
+    <div class="w-full max-w-[26rem]">
+      <div class="lg rounded-modal p-7 sm:p-8 modal-in">
+        <header class="text-center mb-7">
+          <h1 class="brand-wordmark">Percost</h1>
+          <p class="text-[12.5px] text-ink-400 mt-2.5">算清每件东西的真实成本</p>
+        </header>
 
-        <form @submit.prevent="handleLogin" class="space-y-5">
+        <form @submit.prevent="handleLogin" class="space-y-4">
           <div>
-            <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
-              用户名
-            </label>
+            <label for="username" class="field-label">用户名</label>
             <input
               id="username"
               v-model="username"
               type="text"
               required
-              class="glass-input w-full px-4 py-3 rounded-2xl text-sm"
+              autocomplete="username"
+              class="field-input"
               placeholder="请输入用户名"
             />
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
-              密码
-            </label>
+            <label for="password" class="field-label">密码</label>
             <input
               id="password"
               v-model="password"
               type="password"
               required
-              class="glass-input w-full px-4 py-3 rounded-2xl text-sm"
+              autocomplete="current-password"
+              class="field-input"
               placeholder="请输入密码"
             />
           </div>
 
-          <div v-if="error" class="text-red-500 text-sm text-center font-medium">
-            {{ error }}
-          </div>
+          <p v-if="error" class="form-error" role="alert">{{ error }}</p>
 
           <button
             type="submit"
             :disabled="loading"
-            class="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-semibold shadow-lg shadow-indigo-500/20 hover:shadow-xl hover:shadow-indigo-500/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            class="w-full py-3 rounded-pill text-sm font-semibold text-white btn-solid disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ loading ? '登录中...' : '登录' }}
+            {{ loading ? '登录中…' : '登录' }}
           </button>
         </form>
 
         <div class="mt-6 text-center">
-          <router-link to="/" class="text-sm text-gray-400 hover:text-indigo-500 transition-colors">
-            返回首页浏览
+          <router-link
+            to="/"
+            class="text-[12.5px] text-ink-400 hover:text-indigo-500 transition-colors"
+          >
+            不登录，先去看看
           </router-link>
         </div>
       </div>
